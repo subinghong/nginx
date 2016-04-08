@@ -1,0 +1,5 @@
+#!/bin/sh
+
+/usr/local/sbin/sshconfig $*
+
+exec /usr/sbin/sshd -D -e
