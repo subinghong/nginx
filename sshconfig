@@ -34,6 +34,10 @@ function createUser() {
         exit 1
     fi
 
+    if [ -z "$HOME" ]; then
+        export HOME=/home/$user    
+    fi
+    
     if $(cat /etc/passwd | cut -d: -f1 | grep -q "$user"); then
         echo "FATAL: User \"$user\" already exists."
         exit 2
@@ -50,14 +54,18 @@ function createUser() {
             addgroup -g $gid $gid
         fi
 
-        useraddOptions="$useraddOptions -G $gid"
+        useraddOptions="$useraddOptions -G $gid -h $HOME"
     fi
 
     adduser $useraddOptions $user
-    mkdir -p /home/$user
-    chown root:root /home/$user
-    chmod 755 /home/$user
+    mkdir -p $HOME
+    chown root:root $HOME
+    chmod 755 $HOME
 
+    if [ ! -d "/home/$user" ]; then
+        ln -s $HOME /home/$user 
+    fi
+    
     if [ -z "$pass" ]; then
         pass="$(tr -dc A-Za-z0-9 </dev/urandom | head -c256)"
         chpasswdOptions=""
@@ -66,10 +74,10 @@ function createUser() {
     echo "$user:$pass" | chpasswd $chpasswdOptions
 
     # Add SSH keys to authorized_keys with valid permissions
-    if [ -d /home/$user/.ssh/keys ]; then
-        cat /home/$user/.ssh/keys/* >> /home/$user/.ssh/authorized_keys
-        chown $user /home/$user/.ssh/authorized_keys
-        chmod 600 /home/$user/.ssh/authorized_keys
+    if [ -d $HOME/.ssh/keys ]; then
+        cat $HOME/.ssh/keys/* >> $HOME/.ssh/authorized_keys
+        chown $user $HOME/.ssh/authorized_keys
+        chmod 600 $HOME/.ssh/authorized_keys
     fi
 }
 
