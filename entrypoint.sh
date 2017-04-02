@@ -42,5 +42,10 @@ else
 fi
 
 echo $MyScript
+if [ -n "$MyScript" ]; then
+	if [ -f "$MyScript" ]; then
+		bash $MyScript
+	fi
+fi
 
 exec "$@"
