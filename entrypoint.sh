@@ -41,4 +41,6 @@ else
 	/usr/bin/ssh-keygen -A
 fi
 
+echo $MyScript
+
 exec "$@"
