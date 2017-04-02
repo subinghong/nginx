@@ -1,5 +1,13 @@
+
 #!/bin/sh
+set -e
 
 /usr/local/sbin/sshconfig $*
 
+# script_exc_file
+     if [ -f "$script_exc_file" ]; then 
+        exec $script_exc_file
+     fi 
+
 exec /usr/sbin/sshd -D -e
+
