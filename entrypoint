@@ -1,6 +1,5 @@
 
 #!/bin/sh
-set -e
 
 /usr/local/sbin/sshconfig $*
 
@@ -10,4 +9,4 @@ set -e
 #fi 
 
 exec /usr/sbin/sshd -D -e
-
+echo "done!!!!!!!!!!!!!!!!!!!!!"
