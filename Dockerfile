@@ -1,21 +1,15 @@
-FROM oondeo/alpine
+FROM centos:centos7
 
-# Step 1: sshd needs /var/run/sshd/ to run
-# Step 2: Remove keys, they will be generated later by entrypoint
-#         (unique keys for each container)
-RUN apk-install openssh-sftp-server openssh bash rsync p7zip unrar lzip bzip2 gzip tar && \
-    chmod 700 /usr/bin/ssh && \
-    mkdir -p /var/run/sshd && \
-    rm -f /etc/ssh/ssh_host_*key*
+MAINTAINER Mikael Keto
 
-VOLUME /etc/ssh
+COPY entrypoint.sh /entrypoint.sh
+
+# install openssh server
+RUN yum -y install openssh-server && \
+yum clean all && \
+chmod 755 /entrypoint.sh
 
 EXPOSE 22
 
-ENV SSH="no"
-ADD entrypoint /usr/local/sbin/entrypoint
-ADD sshconfig /usr/local/sbin/sshconfig
-
-ENTRYPOINT ["/usr/local/sbin/entrypoint"]
-
-
+ENTRYPOINT ["/entrypoint.sh"]
+CMD ["/usr/sbin/sshd", "-D"]
