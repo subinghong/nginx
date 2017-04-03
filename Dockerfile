@@ -11,5 +11,5 @@ RUN addgroup alpine \
 
 ADD docker-entrypoint.sh /usr/sbin
 RUN chmod +x /usr/sbin/docker-entrypoint.sh
-ENTRYPOINT ["docker-entrypoint.sh"]
+ENTRYPOINT ["entrypoint.sh"]
 CMD ["/usr/sbin/sshd","-D"]
