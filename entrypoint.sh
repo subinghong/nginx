@@ -1,45 +1,35 @@
-#!/bin/bash
+#!/bin/sh
+# generate fresh rsa key
+ssh-keygen -f /etc/ssh/ssh_host_rsa_key -N '' -t rsa
 
-: ${SSH_GID:=}
-: ${SSH_PASSWORD:=$(dd if=/dev/urandom bs=1 count=20 | base64)}
-: ${SSH_PATH:=}
-: ${SSH_UID:=}
-: ${SSH_UMASK:=}
-: ${SSH_USERNAME:=user}
+# generate fresh dsa key
+ssh-keygen -f /etc/ssh/ssh_host_dsa_key -N '' -t dsa
 
-rm -f /var/run/nologin
+#prepare run dir
 mkdir -p /var/run/sshd
 
-useradd_parameters=""
-if [ -n "$SSH_GID" ]; then
-	useradd_parameters="$useradd_parameters -g $SSH_GID"
-fi
-if [ -n "$SSH_UID" ]; then
-	useradd_parameters="$useradd_parameters -u $SSH_UID"
-fi
+#prepare sshd config
+ sed -i "s/UsePrivilegeSeparation.*/UsePrivilegeSeparation no/g" /etc/ssh/sshd_config \
+ && sed -i "s/UsePAM.*/UsePAM no/g" /etc/ssh/sshd_config \
+ && sed -i "s/PermitRootLogin.*/PermitRootLogin yes/g" /etc/ssh/sshd_config \
+ && sed -i "s/#AuthorizedKeysFile/AuthorizedKeysFile/g" /etc/ssh/sshd_config \
+ && sed -i "s/#X11Forwarding no/X11Forwarding yes/g" /etc/ssh/sshd_config \
+ && sed -i "s/#PermitUserEnvironment no/PermitUserEnvironment yes/g" /etc/ssh/sshd_config \
+ && echo "ForwardX11Trusted yes" >> /etc/ssh/ssh_config
 
-$(useradd $useradd_parameters $SSH_USERNAME)
-echo -e "$SSH_PASSWORD\n$SSH_PASSWORD" | (passwd --stdin $SSH_USERNAME)
-echo Added $SSH_USERNAME with password $SSH_PASSWORD
+#prepare xauth
+touch /root/.Xauthority
 
-if [ -n "$SSH_UMASK" ]; then
-	echo "umask $SSH_UMASK" >> /home/$SSH_USERNAME/.bashrc
-fi
+# generate machine-id
+uuidgen > /etc/machine-id
 
-if [ -n "$SSH_PATH" ]; then
-	if [ ! -f "$SSH_PATH" ]; then
-		mkdir -p $SSH_PATH
-		cp -r /etc/ssh $SSH_PATH
-		rm -r /etc/ssh
-		ln -s $SSH_PATH/ssh /etc/ssh
-		/usr/bin/ssh-keygen -A
-	else
-		rm -r /etc/ssh
-		ln -s $SSH_PATH /etc/ssh
-	fi
-else
-	/usr/bin/ssh-keygen -A
-fi
+# set keyboard for all sh users
+echo "export QT_XKB_CONFIG_ROOT=/usr/share/X11/locale" >> /etc/profile
+# set keyboard for direct command use
+echo "QT_XKB_CONFIG_ROOT=/usr/share/X11/locale" >> /root/.ssh/environment
+
+source /etc/profile
+
 
 echo $MyScript
 if [ -n "$MyScript" ]; then
